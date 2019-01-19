@@ -1,7 +1,7 @@
+//MVC Model
 var Rooms = {
-  roomList: {},
-
-  addRoom: function(roomName) {
-    Rooms.roomList[roomName] = true;
+  add: function($room) {
+    var dropDown = RoomsView.$select;
+    $(dropDown).append($room);
   }
 };

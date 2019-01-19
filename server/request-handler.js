@@ -1,12 +1,13 @@
-let fs = require('fs');
 let url = require('url');
 let Messages = require('./messages');
 let { getReqBody, findMimeType, sendResponse } = require('./utils');
+let fs = require('promise-fs');
 
 let chatterboxMessagesAPI = (req, res) => {
   if (req.method === 'POST') {
     getReqBody(req, body => {
       let resBody = JSON.stringify(Messages.storeNewMessage(body));
+      fs.writeFile('./messages.txt', JSON.stringify(Messages));
       return sendResponse(201, 'application/json', resBody, res);
     });
   } else if (req.method === 'GET') {
@@ -28,15 +29,15 @@ let requestHandler = (req, res) => {
   if (urlObject.pathname === '/') {
     urlObject.pathname = '/index.html';
   }
-  fs.readFile('.' + urlObject.pathname, function(err, file) {
-    if (err) {
-      return sendResponse(404, 'text/plain', 'File not found', res);
-    } else {
+  fs.readFile('.' + urlObject.pathname)
+    .then(file => {
       let fileExtension = urlObject.pathname.split('.')[1];
       let mimeType = findMimeType(fileExtension);
       return sendResponse(200, mimeType, file, res);
-    }
-  });
+    })
+    .catch(err => {
+      return sendResponse(404, 'text/plain', 'File not found', res);
+    });
 };
 
 module.exports.requestHandler = requestHandler;

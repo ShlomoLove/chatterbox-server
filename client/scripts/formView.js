@@ -1,21 +1,21 @@
 var FormView = {
   $form: $('form'),
 
-  initialize: function(data) {
+  initialize: function() {
     FormView.$form.on('submit', FormView.handleSubmit);
   },
 
-  handleSubmit: async function(event) {
-    // Stop the browser from submitting the form
-    event.preventDefault();
-    App.startSpinner();
-    let message = {};
-    message.username = App.username;
-    message.roomname = RoomsView.$select.val();
-    message.text = $('#message').val();
-    await Parse.create(message);
+  handleSubmit: function(event) {
+    // event to happen when submit is clicked on
+    event.preventDefault(); // creates message object to be sent to the server
+    var newMsg = $('#message').val();
+    var messageObj = {
+      username: App.username,
+      text: newMsg,
+      roomname: RoomsView.currRoomName
+    };
+    Parse.create(messageObj, App.fetch());
     $('#message').val('');
-    App.refresh();
   },
 
   setStatus: function(active) {

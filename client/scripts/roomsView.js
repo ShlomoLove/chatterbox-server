@@ -1,90 +1,51 @@
 var RoomsView = {
-  $button: $('#rooms button'),
+  $addRoom: $('#rooms .addRoomButton'),
+  $go: $('#rooms .goButton'),
   $select: $('#rooms select'),
-  hasFocus: true,
+  $roomName: $('#rooms #roomName'),
+  $option: $('#rooms .option'),
+  currRoomName: 'lobby',
 
-  initialize: function(data) {
-    //adds room options
-    RoomsView.$select.append(RoomsView.optionConstructor('All Rooms'));
-    RoomsView.$select.append(RoomsView.optionConstructor('New Room...'));
-    for (let i = 0; i < data.results.length; i++) {
-      if (data.results[i].roomname) {
-        Rooms.addRoom(data.results[i].roomname);
-      }
-    }
-    for (let room in Rooms.roomList) {
-      RoomsView.$select.append(RoomsView.optionConstructor(room));
-    }
-    //attaches changeroom event listener
-    RoomsView.$select.change(RoomsView.changeRoom);
+  initialize: function() {
+    RoomsView.renderRoom(RoomsView.currRoomName);
+    console.log(RoomsView.currRoomName);
 
-    RoomsView.render(data);
-    RoomsView.$button.on('click', RoomsView.handleCreateNewRoom);
+    RoomsView.$addRoom.on('click', function(event) {
+      // start up new room and add room
 
-    $(window).on('focusout', RoomsView.showUnreadCount);
-    $(window).on('focus', RoomsView.hideUnreadCount);
-  },
+      var roomName = RoomsView.$roomName;
+      RoomsView.renderRoom(roomName.val());
+      roomName.val('');
+    });
 
-  showUnreadCount: function(event) {
-    console.log('showing unread');
-    RoomsView.hasFocus = false;
-    RoomsView.updateUnreadCount();
-  },
-
-  hideUnreadCount: function(event) {
-    RoomsView.hasFocus = true;
-    MessagesView.unreadCount = 0;
-    RoomsView.updateUnreadCount();
-  },
-
-  updateUnreadCount: function() {
-    if (RoomsView.hasFocus) {
-      $('title').text('chatterbox');
-    } else {
-      $('title').text(`(${MessagesView.unreadCount}) chatterbox`);
-    }
-  },
-
-  optionConstructor: function(roomName) {
-    return $('<option>', {
-      value: roomName,
-      text: roomName
+    RoomsView.$go.on('click', function(event) {
+      // empties curr chatroom & repopulates with filtered messages
+      RoomsView.currRoomName = $('#option :selected')
+        .text()
+        .trim();
+      console.log();
+      MessagesView.$chats.empty();
+      App.lastId = '';
+      App.fetch();
+      // var currFriends = _.filter(Friends.friendList, function(friend) {
+      //   for (var key in friend) {
+      //     return friend[key] === true;
+      //   }
+      // });
+      // console.log(currFriends);
+      // var currFriendNames = _.map(currFriends, function(friend) {
+      //   for (var key in friend) {
+      //     return key;
+      //   }
+      // });
+      // console.log(currFriendNames);
+      // for (var i = 0; currFriendNames.length; i++) {
+      //   Friends.updateFriendList(currFriendNames[i]);
+      // }
     });
   },
-
-  handleCreateNewRoom: function(event) {
-    let newRoomName = $('#new-room').val();
-    Rooms.addRoom(newRoomName);
-    RoomsView.$select.append(RoomsView.optionConstructor(newRoomName));
-    $('#new-room').remove();
-    $('#rooms select').val(newRoomName);
-    RoomsView.changeRoom();
-  },
-
-  changeRoom: async function(event) {
-    let currentRoom = RoomsView.$select.find('option:selected').val();
-    if (currentRoom === 'New Room...') {
-      let newInput = $('<input type="text" name="new-room" id="new-room">');
-      $('#rooms select').after(newInput);
-    } else {
-      let data = await Parse.readAll();
-      MessagesView.clearMessages();
-      RoomsView.render(data);
-    }
-  },
-
-  render: async function(data) {
-    let currentRoom = RoomsView.$select.find('option:selected').val();
-    await RoomsView.updateCurrentMessages(currentRoom);
-    MessagesView.render();
-    RoomsView.updateUnreadCount();
-  },
-
-  updateCurrentMessages: async function(roomName) {
-    let fetched = await Parse.readRoom(roomName);
-    if (fetched !== -1) {
-      fetched.results.reverse();
-      Messages.currentMessages = fetched.results;
-    }
+  renderRoom: function(name) {
+    var $room = `<option class = 'option' value = ${name}> ${name} </option>`;
+    Rooms.add($room);
   }
 };

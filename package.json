@@ -33,6 +33,7 @@
   "dependencies": {
     "dompurify": "^1.0.9",
     "jquery": "^3.3.1",
+    "promise-fs": "^2.0.1",
     "purify": "^3.3.1",
     "underscore": "^1.9.1"
   }

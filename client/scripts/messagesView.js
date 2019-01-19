@@ -1,63 +1,34 @@
 var MessagesView = {
   $chats: $('#chats'),
-  unreadCount: 0,
 
-  initialize: function(data) {
-    // MessagesView.updateMessages(data);
-  },
+  initialize: function() {
+    $userName = $('div');
+    $submitButton = $('submit');
 
-  render: function() {
-    if (Messages.currentMessages.length) {
-      let start = 0;
-      if (Messages.mostRecentMessageID !== null) {
-        start =
-          Messages.currentMessages.findIndex(
-            msg => msg.objectId === Messages.mostRecentMessageID
-          ) + 1;
+    $('div').on('click', function(event) {
+      // retrieving classname for verification of clicked item and using its text for username
+      if (event.target.className.includes('username')) {
+        var friendName = event.target.innerText;
+        Friends.toggleStatus(friendName);
       }
-      let newMessageCount = 0;
-      console.log(Messages.currentMessages);
-      console.log(start);
-      console.log(Messages.currentMessages[start]);
-      for (let i = start; i < Messages.currentMessages.length; i++) {
-        MessagesView.renderMessage(Messages.currentMessages[i]);
-        newMessageCount++;
-      }
-      MessagesView.unreadCount += newMessageCount;
-      Messages.mostRecentMessageID =
-        Messages.currentMessages[Messages.currentMessages.length - 1].objectId;
-    }
-  },
-
-  clearMessages: function() {
-    MessagesView.$chats.empty();
-    Messages.mostRecentMessageID = null;
-  },
-
-  isNewMessage: function(targetMessage) {
-    return !Boolean(
-      Messages.allMessages.filter(
-        msg => msg.objectId === targetMessage.objectId
-      ).length
-    );
+    });
   },
 
   renderMessage: function(message) {
-    let $message = $(MessageView.render(MessagesView.sanitizeMessage(message)));
-    $message.find('.username').on('click', Friends.toggleStatus);
-    MessagesView.$chats.prepend($message);
-  },
+    // creating a DOM ready message as value with its roomname as key inside obj
+    var template = `
+    <div class="chat">
+      <div class="username ${_.escape(message.username)}">${_.escape(
+  message.username
+)}</div>
+      <div class="text">${_.escape(message.text)}</div>
+    </div>
+    `;
 
-  sanitizeMessage: function(dirtyMessage) {
-    let sanitizedMessage = {};
+    MessagesView.$chats.prepend(template);
 
-    for (let key in dirtyMessage) {
-      sanitizedMessage[key] = dirtyMessage[key];
-    }
-
-    sanitizedMessage.username = DOMPurify.sanitize(dirtyMessage.username);
-    sanitizedMessage.text = DOMPurify.sanitize(dirtyMessage.text);
-
-    return sanitizedMessage;
+    Messages[message.roomname] === undefined
+      ? (Messages[message.roomname] = [template.roomname])
+      : Messages[message.roomname].push(template.roomname);
   }
 };

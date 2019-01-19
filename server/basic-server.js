@@ -1,7 +1,17 @@
 /* Import node's http module: */
 var http = require('http');
 var { requestHandler } = require('./request-handler');
+var Messages = require('./messages');
+var fs = require('promise-fs');
 
+// load messages
+fs.readFile('./messages.txt')
+  .then(file => {
+    let oldMessages = JSON.parse(file);
+    Messages.messages = oldMessages.messages;
+    Messages.idCount = oldMessages.idCount;
+  })
+  .catch(err => fs.writeFile('messages.txt', JSON.stringify(Messages)));
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
 // normally already claimed by another server and/or not accessible
