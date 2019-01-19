@@ -1,7 +1,5 @@
 var Parse = {
-  server: `http://parse.${
-    window.CAMPUS
-  }.hackreactor.com/chatterbox/classes/messages`,
+  server: 'http://localhost:4000/chatterbox/classes/messages',
 
   create: function(message) {
     // todo: save a message to the server
@@ -10,7 +8,8 @@ var Parse = {
       url: Parse.server,
       type: 'POST',
       data: JSON.stringify(message),
-      contentType: 'application/json'
+      contentType: 'application/json',
+      crossDomain: true
     });
   },
 
@@ -19,7 +18,8 @@ var Parse = {
       url: Parse.server,
       type: 'GET',
       data: { order: '-createdAt' },
-      contentType: 'application/json'
+      contentType: 'application/json',
+      crossDomain: true
     });
   },
 
@@ -34,7 +34,8 @@ var Parse = {
       url: Parse.server,
       type: 'GET',
       data: { order: '-createdAt', where: { roomname } },
-      contentType: 'application/json'
+      contentType: 'application/json',
+      crossDomain: true
     });
   }
 };

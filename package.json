@@ -29,5 +29,11 @@
     "presets": [
       "es2015"
     ]
+  },
+  "dependencies": {
+    "dompurify": "^1.0.9",
+    "jquery": "^3.3.1",
+    "purify": "^3.3.1",
+    "underscore": "^1.9.1"
   }
 }
