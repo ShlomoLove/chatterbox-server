@@ -1,6 +1,46 @@
-var fs = require('fs');
-var url = require('url');
-var Messages = require('./messages');
+let fs = require('fs');
+let url = require('url');
+let Messages = require('./messages');
+let { getReqBody, findMimeType, sendResponse } = require('./utils');
+
+let chatterboxMessagesAPI = (req, res) => {
+  if (req.method === 'POST') {
+    getReqBody(req, body => {
+      let resBody = JSON.stringify(Messages.storeNewMessage(body));
+      return sendResponse(201, 'application/json', resBody, res);
+    });
+  } else if (req.method === 'GET') {
+    let resBody = {
+      results: Messages.messages
+    };
+    return sendResponse(200, 'application/json', JSON.stringify(resBody), res);
+  }
+};
+
+let requestHandler = (req, res) => {
+  let urlObject = url.parse(req.url);
+  if (req.method === 'OPTIONS') {
+    return sendResponse(200, 'text/plain', '', res);
+  }
+  if (urlObject.pathname === '/chatterbox/classes/messages') {
+    return chatterboxMessagesAPI(req, res);
+  }
+  if (urlObject.pathname === '/') {
+    urlObject.pathname = '/index.html';
+  }
+  fs.readFile('.' + urlObject.pathname, function(err, file) {
+    if (err) {
+      return sendResponse(404, 'text/plain', 'File not found', res);
+    } else {
+      let fileExtension = urlObject.pathname.split('.')[1];
+      let mimeType = findMimeType(fileExtension);
+      return sendResponse(200, mimeType, file, res);
+    }
+  });
+};
+
+module.exports.requestHandler = requestHandler;
+
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -24,101 +64,3 @@ this file and include it in basic-server.js so that it actually works.
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
-
-var mimeTypes = {
-  html: 'text/html',
-  jpeg: 'image/jpeg',
-  jpg: 'image/jpeg',
-  png: 'image/png',
-  js: 'text/javascript',
-  css: 'text/css',
-  gif: 'image/gif'
-};
-
-let responses = {
-  POST: (req, res) => {
-    let body = [];
-    req
-      .on('data', chunk => {
-        body.push(chunk);
-      })
-      .on('end', () => {
-        body = JSON.parse(Buffer.concat(body).toString());
-        body.objectId = Messages.idCount;
-        Messages.idCount++;
-        body.createdAt = new Date();
-        Messages.messages.push(body);
-        console.log(Messages.messages);
-        let resBody = {
-          createdAt: body.createdAt,
-          objectId: body.objectId
-        };
-        var statusCode = 201;
-        var headers = defaultCorsHeaders;
-        headers['Content-Type'] = 'application/json';
-
-        res.writeHead(statusCode, headers);
-        res.end(JSON.stringify(resBody));
-      });
-  },
-  GET: (req, res) => {
-    let resBody = {
-      results: Messages.messages
-    };
-    var statusCode = 200;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'application/json';
-
-    res.writeHead(statusCode, headers);
-    res.end(JSON.stringify(resBody));
-  },
-  DELETE: (req, res) => {},
-  OPTIONS: (req, res) => {}
-};
-
-module.exports.requestHandler = function(request, response) {
-  if (request.method === 'OPTIONS') {
-    var statusCode = 200;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'plain/text';
-
-    response.writeHead(statusCode, headers);
-    response.end('');
-  }
-  let urlObject = url.parse(request.url);
-  if (urlObject.pathname === '/chatterbox/classes/messages') {
-    if (request.method === 'POST') {
-      return responses.POST(request, response);
-    }
-    if (request.method === 'GET') {
-      return responses.GET(request, response);
-    }
-  }
-  var headers = defaultCorsHeaders;
-
-  if (urlObject.pathname === '/') {
-    urlObject.pathname = '/index.html';
-  }
-  console.log(urlObject.pathname);
-  fs.readFile('.' + urlObject.pathname, function(err, file) {
-    console.log(err);
-    if (err) {
-      headers['Content-Type'] = 'text/plain';
-      response.writeHead(404, headers);
-      response.end('File not found');
-      console.log(response);
-    } else {
-      let fileExtension = urlObject.pathname.split('.')[1];
-      let mimeType = mimeTypes[fileExtension];
-      headers['Content-Type'] = mimeType;
-      response.writeHead(200, headers);
-      response.end(file);
-    }
-  });
-};
